@@ -186,10 +186,11 @@
 
   <script>
     // 曼荼羅オラクルカードのデータ（PDFより抽出）
+    // ※画像ファイルの拡張子を.jpgから.pngに修正しました
     const cardsData = [
       {
         id: 1,
-        image: '1_s.jpg',
+        image: '1_s.png',
         keywords: [
           {
             word: '進',
@@ -222,7 +223,7 @@
       },
       {
         id: 10,
-        image: '10_s.jpg',
+        image: '10_s.png',
         keywords: [
           {
             word: '魂',
@@ -255,7 +256,7 @@
       },
       {
         id: 11,
-        image: '11_s.jpg',
+        image: '11_s.png',
         keywords: [
           {
             word: '光',
@@ -288,7 +289,7 @@
       },
       {
         id: 18,
-        image: '18_s.jpg',
+        image: '18_s.png',
         keywords: [
           {
             word: '新',
@@ -321,7 +322,7 @@
       },
       {
         id: 22,
-        image: '22_s.jpg',
+        image: '22_s.png',
         keywords: [
           {
             word: '和',
@@ -354,7 +355,7 @@
       },
       {
         id: 26,
-        image: '26_s.jpg',
+        image: '26_s.png',
         keywords: [
           {
             word: '信',
@@ -387,7 +388,7 @@
       },
       {
         id: 32,
-        image: '32_s.jpg',
+        image: '32_s.png',
         keywords: [
           {
             word: '咲',
@@ -454,8 +455,8 @@
         cardWrapper.innerHTML = `
           <div class="card-inner">
             <div class="card-front">
-              <!-- 指定された画像をロード -->
-              <img src="uramen.jpg" alt="裏向きのカード">
+              <!-- 指定された画像をロード (uramen.jpg を uramen.png に変更) -->
+              <img src="uramen.png" alt="裏向きのカード">
             </div>
             <div class="card-back">
               <img src="" alt="表向きのカード" class="result-img">
