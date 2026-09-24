@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>曼荼羅オラクルカード</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    /* 神秘的で落ち着いたスピリチュアルな背景と基本設定 */
+    body {
+      font-family: 'Shippori Mincho', serif;
+      background-color: #0b0410;
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(60, 20, 100, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(20, 40, 100, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(100, 20, 60, 0.2) 0%, transparent 60%);
+      color: #ede9f6;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* 星屑のようなパーティクル効果をCSSで簡易表現 */
+    .stars {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      pointer-events: none;
+      background-image: 
+        radial-gradient(1px 1px at 20px 30px, rgba(255,255,255,0.8), rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 40px 70px, rgba(255,255,255,0.6), rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 90px 40px, rgba(255,255,255,0.9), rgba(0,0,0,0)),
+        radial-gradient(2px 2px at 150px 120px, rgba(255,255,255,0.4), rgba(0,0,0,0)),
+        radial-gradient(1px 1px at 220px 80px, rgba(255,255,255,0.7), rgba(0,0,0,0)),
+        radial-gradient(1.5px 1.5px at 300px 180px, rgba(255,255,255,0.5), rgba(0,0,0,0));
+      background-size: 350px 350px;
+      opacity: 0.6;
+    }
+
+    /* カードコンテナとフリップアニメーション */
+    .card-wrapper {
+      perspective: 1000px;
+      flex: 1 1 0;
+      max-width: 130px;
+      aspect-ratio: 65 / 106;
+      transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+    }
+
+    /* 選択時の状態 */
+    .card-wrapper.selected {
+      flex: 0 0 auto;
+      width: 65vw;
+      max-width: 320px;
+      z-index: 10;
+    }
+
+    /* 非選択時の状態（消える） */
+    .card-wrapper.unselected {
+      flex: 0 0 0;
+      max-width: 0;
+      margin: 0;
+      padding: 0;
+      opacity: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+    }
+
+    .card-wrapper.flipped .card-inner {
+      transform: rotateY(180deg);
+    }
+
+    .card-front, .card-back {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      backface-visibility: hidden;
+      border-radius: 4.5%; /* 実際のカードの丸みに寄せる */
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 15px rgba(255,255,255,0.1) inset;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* 裏面（初期表示） */
+    .card-front {
+      transform: rotateY(0deg);
+    }
+
+    /* 表面（結果表示） */
+    .card-back {
+      transform: rotateY(180deg);
+    }
+
+    .card-front img, .card-back img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* ボタンや結果パネルの装飾 */
+    .keyword-btn {
+      background: linear-gradient(145deg, rgba(80, 40, 120, 0.6), rgba(40, 10, 80, 0.8));
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(180, 140, 255, 0.3);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      transition: all 0.3s ease;
+    }
+    .keyword-btn:hover, .keyword-btn:active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(180, 140, 255, 0.4);
+      border-color: rgba(180, 140, 255, 0.6);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.8s ease forwards;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="relative flex flex-col items-center">
+  <div class="stars"></div>
+  
+  <main class="relative z-10 flex flex-col items-center justify-start w-full min-h-screen pt-10 px-4 pb-20">
+    <!-- ヘッダータイトル -->
+    <header class="text-center mb-6">
+      <h1 class="text-2xl md:text-3xl font-bold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-purple-300 via-pink-200 to-indigo-300 drop-shadow-lg mb-2">
+        曼荼羅オラクルカード
+      </h1>
+      <p id="instruction-text" class="text-sm md:text-base text-purple-200/80 transition-opacity duration-500">
+        直感で1枚選んでタップしてください
+      </p>
+    </header>
+
+    <!-- カード表示エリア -->
+    <section id="cards-container" class="flex justify-center items-center gap-4 w-full max-w-lg mb-8 transition-all duration-700 h-[220px] sm:h-[300px]">
+      <!-- JSでカード3枚を動的に生成 -->
+    </section>
+
+    <!-- キーワード選択エリア -->
+    <section id="keywords-section" class="hidden flex-col items-center w-full max-w-md fade-in">
+      <p class="text-sm md:text-base text-purple-200 mb-5 text-center">
+        気になるキーワードを1つ選んでください
+      </p>
+      <div id="keywords-buttons" class="flex flex-col sm:flex-row flex-wrap justify-center gap-4 w-full">
+        <!-- JSでボタンを動的に生成 -->
+      </div>
+    </section>
+
+    <!-- メッセージ結果表示エリア -->
+    <section id="result-section" class="hidden flex-col items-center w-full max-w-xl mt-8 fade-in">
+      <h2 id="result-keyword" class="text-2xl md:text-3xl font-bold mb-6 text-center text-yellow-100 tracking-wide drop-shadow-[0_0_10px_rgba(255,255,150,0.5)]"></h2>
+      
+      <div class="bg-black/50 backdrop-blur-md rounded-2xl p-6 md:p-8 mb-8 w-full border border-purple-500/40 shadow-[0_0_30px_rgba(80,40,120,0.4)]">
+        <h3 class="text-lg md:text-xl font-bold mb-3 text-purple-300 border-b border-purple-500/30 pb-2">
+          【解説書のメッセージ】
+        </h3>
+        <p id="result-message" class="text-sm md:text-base leading-loose mb-8 text-purple-50">
+        </p>
+        
+        <h3 class="text-lg md:text-xl font-bold mb-3 text-purple-300 border-b border-purple-500/30 pb-2">
+          【自分への問いかけ】
+        </h3>
+        <ul id="result-questions" class="text-sm md:text-base leading-loose space-y-3 text-purple-50">
+        </ul>
+      </div>
+      
+      <button onclick="resetApp()" class="px-8 py-3 rounded-full bg-gradient-to-r from-purple-800 to-indigo-800 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg transition-all border border-purple-500/50 hover:shadow-[0_0_20px_rgba(150,100,255,0.5)] tracking-wider">
+        最初からやり直す
+      </button>
+    </section>
+  </main>
+
+  <script>
+    // 曼荼羅オラクルカードのデータ（PDFより抽出）
+    const cardsData = [
+      {
+        id: 1,
+        image: '1_s.jpg',
+        keywords: [
+          {
+            word: '進',
+            message: 'このキーワードは、あなたが前進する時期に来ていることを示しています。今は立ち止まることなく、進むべき道を進んでいく勇気を持つべき時です。過去の経験や失敗から学び、それを糧にして新しいステップを踏み出しましょう。恐れずに前進することで、新たな可能性が開けるでしょう。',
+            questions: [
+              '◎なぜ私は進むことを恐れているのだろうか?',
+              '◎過去の成功や失敗から学んだことは何?',
+              '◎今、一歩を踏み出すために必要な勇気やサポートは何だろうか?'
+            ]
+          },
+          {
+            word: '未来',
+            message: '今、あなたが描くビジョンや夢に向かって積極的に行動することで、その未来は確実に現実のものとなります。未来を恐れずに、自分の可能性を信じて進んでいきましょう。',
+            questions: [
+              '◎私が本当に望む未来はどんなものだろうか?',
+              '◎その未来に向かって進むために、今日から何を始められるだろうか?',
+              '◎未来へのビジョンを具体的に描くために、どんな計画や行動が必要だろうか?'
+            ]
+          },
+          {
+            word: 'チャンスを掴む',
+            message: 'チャンスが訪れたときにそれを見逃さないように、常にアンテナを張り巡らせておくことが重要です。また、自分のスキルや知識を磨き、準備を整えておくことで、チャンスを最大限に活かすことができます。積極的に行動し、未来の可能性を広げていきましょう。',
+            questions: [
+              '◎今、目の前にあるチャンスはどんなもの?',
+              '◎このチャンスを逃すことによって、どんな可能性を失うかもしれないのだろうか?',
+              '◎チャンスを掴むために、自分が今できる具体的な行動は何だろうか?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 10,
+        image: '10_s.jpg',
+        keywords: [
+          {
+            word: '魂',
+            message: 'このキーワードは、あなたが自分の魂の声に耳を傾け、内なるガイダンスを受け取る必要があることを示しています。魂は、あなたが本当に何を望んでいるのか、どの道を歩むべきかを知っています。今こそ、自分の魂に信頼を置き、その導きに従う時です。',
+            questions: [
+              '◎私の魂の声は何を伝えようとしているのか?',
+              '◎自分の心に正直になるためには、どのような行動を取るべきか?',
+              '◎内なる静けさを取り戻すために、どのような時間を作ることができるか?'
+            ]
+          },
+          {
+            word: '本気',
+            message: '何事にも本気で取り組む姿勢は、あなた自身の成長を促します。自分に対して誠実であり、やると決めたことには全力を尽くしてください。どんな困難があっても、本気で取り組むことで乗り越える力が湧いてきます。自分を信じ、全力を尽くすことで、素晴らしい結果が待っています。',
+            questions: [
+              '◎今、本気で取り組むべきことは何だろう?',
+              '◎本気で取り組むために、私は何を恐れているのか?',
+              '◎自分自身に対して誠実であるために、何を変える必要があるだろう?'
+            ]
+          },
+          {
+            word: '成長する',
+            message: '成長は時に痛みを伴うことがありますが、それはあなたがより良い自分になるためのプロセスです。新しいことに挑戦し、自分の限界を超えていくことで、大きな成長を遂げることができます。過去の失敗や経験を糧にして、自分を信じて前に進んでください。あなたの成長は、周りの人々にもポジティブな影響を与えるでしょう。',
+            questions: [
+              '◎成長のチャンスを逃さないために、今できることは何だろう?',
+              '◎なぜ私は変化を恐れているのだろうか?',
+              '◎成長するために必要な新しい挑戦や変化とは何か?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 11,
+        image: '11_s.jpg',
+        keywords: [
+          {
+            word: '光',
+            message: 'このキーワードは、あなたの人生に明るい光が差し込むことを示しています。この光は希望、インスピレーション、そして癒しの象徴です。過去の苦しみや困難が終わりを迎え、新しい始まりが訪れることを意味しています。光が暗闇を照らし、あなたの進むべき道を明らかにします。',
+            questions: [
+              '◎何が私の心に光をもたらし、ポジティブな気持ちにさせるのだろうか?',
+              '◎目の前の暗闇にばかり焦点を当てていないだろうか?',
+              '◎今の私が見逃している光は何だろうか?'
+            ]
+          },
+          {
+            word: '向上',
+            message: 'あなたは、自己成長の旅に出る準備ができています。自分の強みや才能を認識し、それを最大限に活用することが大切です。新しいスキルを学ぶことや、興味のある分野に挑戦することで、さらに高いレベルに到達することができます。困難な状況でも、前向きな姿勢を保ち、自己向上の道を歩み続けましょう。',
+            questions: [
+              '◎どの分野で自分をさらに成長させたいと思っているのだろうか?',
+              '◎自己成長を妨げている要因は何であり、それを克服するためにどんなサポートが必要だろうか?',
+              '◎今まで避けてきた新しい挑戦に対して、どのようにして一歩を踏み出すことができるだろうか?'
+            ]
+          },
+          {
+            word: 'まっすぐに',
+            message: '今、あなたの前には選択肢や道が複数あるかもしれません。けれども、何が本当に正しいのか、何があなたの心を揺るがすのかを見極めることが大切です。目先の利益や一時的な感情に流されず、自分の信じる道を「まっすぐに」進んでください。どんなに厳しい状況でも、自分を偽らない選択をすれば、結果的に大きな喜びや満足感を得ることができるでしょう。',
+            questions: [
+              '◎私は今、自分の本心に従って行動しているだろうか?',
+              '◎この選択は、私が本当に大切にしている価値観に合致しているだろうか?',
+              '◎短期的な利益ではなく、長期的な幸福を考えた時、この道を選ぶことが正しいのだろうか?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 18,
+        image: '18_s.jpg',
+        keywords: [
+          {
+            word: '新',
+            message: '今があなたの人生の新しい章をスタートさせる時です。新しい物事、新しい出会、新しい考え方があなたの前に広がろうとしています。過去に縛られることなく、軽やかな気持ちで新しい道を歩んでください。どんなに小さな一歩でも、新しい方向に進む勇気を持ちましょう。',
+            questions: [
+              '◎何が新しいことに踏み出すのを躊躇させているのだろう?',
+              '◎過去に固執しているのは、どの部分だろう?',
+              '◎新しい経験から学べることは何か?'
+            ]
+          },
+          {
+            word: '挑戦',
+            message: '挑戦は怖いものではなく、自分を試し、成長させるための機会です。失敗を恐れず、挑戦すること自体が成功への一歩だと心得てください。あなたの中には困難を乗り越える力が既に備わっています。その力を信じ、挑戦に全力で立ち向かいましょう。',
+            questions: [
+              '◎私は何を恐れて挑戦出来ないのだろう?',
+              '◎もし失敗したとしても、それが私にとってどのような学びになるだろう?',
+              '◎挑戦しないことで、私はどんな成長の機会を逃しているのだろうか?'
+            ]
+          },
+          {
+            word: 'ここから始める',
+            message: '行動する時は今です。「完璧なタイミング」を待つ必要はありません。今、ここから始めることが、あなたにとって最高の選択です。小さな一歩でも、毎日続けることで大きな変化が訪れます。過去の失敗や不安にとらわれず、目の前にある機会を大切にし、今から新しいスタートを切りましょう。',
+            questions: [
+              '◎私が今始めるのを妨げているのは何か?',
+              '◎どんな小さな一歩からでも始めることができるとしたら、何から始めるべきか?',
+              '◎なぜ、完璧なタイミングを待ち続けるのだろうか?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 22,
+        image: '22_s.jpg',
+        keywords: [
+          {
+            word: '和',
+            message: 'あなたの周りには穏やかで安定したエネルギーが流れています。人間関係においても、対立や不和が解消され、理解と共感が育まれる時期です。自分自身とも調和を感じることで、内なる平和が広がり、外の世界にも良い影響を与えるでしょう。',
+            questions: [
+              '◎私はなぜ他者と調和することに抵抗を感じているのだろう?',
+              '◎自分の中にどんな感情や思い込みが、調和を妨げているのか?',
+              '◎他者との調和を築くために、私がまず最初にできる小さな一歩は何だろう?'
+            ]
+          },
+          {
+            word: '変化',
+            message: 'あなたは人生の新しい段階に入る準備ができています。変化は時に恐ろしいものですが、同時に成長と進化のための重要なステップでもあります。今、あなたの前に広がる変化を受け入れることで、より豊かな未来へ導かれるでしょう。変化を恐れるのではなく、チャンスと捉えましょう。',
+            questions: [
+              '◎この変化に対して、私が恐れていることは何だろう?',
+              '◎変化を受け入れられないことで、私は何を守ろうとしているのか?',
+              '◎変化を受け入れることで、どんな可能性が開かれるだろう?'
+            ]
+          },
+          {
+            word: '流れにまかせる',
+            message: '無理に何かをコントロールしようとするのではなく、状況が自ずと整うのを待つ時期です。宇宙の流れに信頼を置き、焦らずに物事が進むのを見守りましょう。焦らず、目の前の出来事を受け入れ、宇宙の計らいを信じましょう。',
+            questions: [
+              '◎私はなぜこの状況をコントロールしたいと思っているのだろう?',
+              '◎流れに任せることに対して、どんな不安や抵抗を感じているのか?',
+              '◎自然の流れに身を任せることで、どんな新しい可能性が見えてくるだろう?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 26,
+        image: '26_s.jpg',
+        keywords: [
+          {
+            word: '信',
+            message: 'このキーワードは、自己信頼と他者への信頼の両方を意味します。あなたが今、何かを始めたばかりであったり、目標に向かって努力しているならば、自分自身を信じることが重要です。また、他者との信頼関係も大切です。周囲の人々のサポートを受け入れ、協力し合うことで、より大きな成果を得られるでしょう。',
+            questions: [
+              '◎自分の能力や価値を過小評価していないか?',
+              '◎他者への信頼が不足している原因は何か?',
+              '◎自分自身を信じるために、これまでの成功や努力を振り返ることができるか?'
+            ]
+          },
+          {
+            word: '継続',
+            message: '「継続」は、成功への鍵です。どんなに小さな一歩でも、それを積み重ねることで大きな変化が生まれます。途中で諦めたくなる瞬間が訪れるかもしれませんが、その時こそ踏ん張り時です。忍耐強く継続することが、最終的には目標達成へとつながります。覚えておいてください、たとえ進みが遅く感じても、それは前進している証です。',
+            questions: [
+              '◎継続することが難しいと感じる理由は何か?',
+              '◎途中で投げ出さずに続けるために、どのような小さな目標を設定できるだろうか?',
+              '◎過去に継続して成果を上げた経験は何だろう?'
+            ]
+          },
+          {
+            word: 'ゆっくりと',
+            message: 'このキーワードは、急がず焦らず、ゆっくりと進むことの重要性を教えてくれます。速さではなく、着実に進むことが求められています。人生の旅路はマラソンのようなもの。途中で休息を取りながら、しっかりと歩を進めましょう。焦ることなく、リズムを保ちながら進むことで、心の余裕が生まれ、創造的なアイデアや新たな視点が見えてきます。',
+            questions: [
+              '◎なぜ急ぐ必要があると感じているのか?',
+              '◎ペースを落とすことで得られるメリットは何か?',
+              '◎休息やリラックスを取ることに対して罪悪感を感じていないか?'
+            ]
+          }
+        ]
+      },
+      {
+        id: 32,
+        image: '32_s.jpg',
+        keywords: [
+          {
+            word: '咲',
+            message: 'あなたの内に秘めた才能や可能性が、まるで花が咲くように開花する時が来ています。これまでの努力や経験が実を結び、今こそその美しさを世界に示す時です。あなたの本質を隠さず、堂々と表現することを許しましょう。',
+            questions: [
+              '◎私が自分の才能を表現することを恐れているなら、何がそうさせているだろう?',
+              '◎自分の本質を隠すことで、何を守ろうとしているのだろう?',
+              '◎もし失敗や批判を恐れなかったら、私は何を始めるだろう?'
+            ]
+          },
+          {
+            word: '自然',
+            message: 'このキーワードは、あなたが自然のリズムやサイクルに調和することを求めています。無理をせず、流れに身を任せることで、物事がスムーズに進んでいくでしょう。自然の中で過ごす時間を大切にし、自分自身をリセットする機会を持つことが重要です。',
+            questions: [
+              '◎私が自然のリズムに逆らっていると感じる瞬間はどんな時だろう?',
+              '◎自分に無理をさせている要因は何だろう?',
+              '◎自然の中で過ごしたら、どんなプラスの変化があるだろう?'
+            ]
+          },
+          {
+            word: '許可する',
+            message: '自分自身や他者に対して許可を与えることは、成長と癒しのプロセスを促進します。このキーワードは、あなたが自分に対して厳しすぎたり、何かを許せずに苦しんでいることを示唆しています。今こそ、その枠を解き放ち、自由になる時です。自分を許し、他者を許すことで、新たなステージへと進むことができます。',
+            questions: [
+              '◎私が他者を許せないなら、何がそうさせているだろう?',
+              '◎私が自分に許可を与えることをためらう理由は何だろう?',
+              '◎自分を許すことで、どんな変化が起こるだろう?'
+            ]
+          }
+        ]
+      }
+    ];
+
+    // DOM要素
+    const cardsContainer = document.getElementById('cards-container');
+    const instructionText = document.getElementById('instruction-text');
+    const keywordsSection = document.getElementById('keywords-section');
+    const keywordsButtons = document.getElementById('keywords-buttons');
+    const resultSection = document.getElementById('result-section');
+    
+    let isAnimating = false;
+    let currentSelectedCardData = null;
+
+    // アプリの初期化
+    function initApp() {
+      isAnimating = false;
+      currentSelectedCardData = null;
+      
+      // UIのリセット
+      instructionText.style.opacity = '1';
+      instructionText.textContent = '直感で1枚選んでタップしてください';
+      keywordsSection.classList.add('hidden');
+      resultSection.classList.add('hidden');
+      keywordsButtons.innerHTML = '';
+      
+      // カードの生成（3枚）
+      cardsContainer.innerHTML = '';
+      cardsContainer.style.height = 'auto'; // 高さを元に戻す
+      
+      for (let i = 0; i < 3; i++) {
+        const cardWrapper = document.createElement('div');
+        cardWrapper.className = 'card-wrapper';
+        cardWrapper.onclick = () => handleCardClick(cardWrapper);
+        
+        cardWrapper.innerHTML = `
+          <div class="card-inner">
+            <div class="card-front">
+              <!-- fallbackとしてプレースホルダを記述しつつ、指定された画像をロード -->
+              <img src="uramen.jpg" alt="裏向きのカード" onerror="this.src='https://placehold.co/650x1060/3a1c71/fff?text=Mandala'">
+            </div>
+            <div class="card-back">
+              <img src="" alt="表向きのカード" class="result-img">
+            </div>
+          </div>
+        `;
+        cardsContainer.appendChild(cardWrapper);
+      }
+    }
+
+    // カード選択時の処理
+    function handleCardClick(selectedCard) {
+      if (isAnimating) return;
+      isAnimating = true;
+
+      // ガイダンステキストのフェードアウト
+      instructionText.style.opacity = '0';
+      
+      // ランダムにカードデータを1つ選ぶ
+      const randomIndex = Math.floor(Math.random() * cardsData.length);
+      currentSelectedCardData = cardsData[randomIndex];
+      
+      // 選択されたカードの裏面（表示上は絵柄）に画像をセット
+      const resultImg = selectedCard.querySelector('.result-img');
+      resultImg.src = currentSelectedCardData.image;
+      // 万が一画像がない場合のフォールバック
+      resultImg.onerror = () => {
+        resultImg.src = `https://placehold.co/650x1060/1a0b2e/fff?text=Card+${currentSelectedCardData.id}`;
+      };
+
+      // 兄弟要素（選ばれなかったカード）をフェードアウト・縮小
+      const allCards = cardsContainer.querySelectorAll('.card-wrapper');
+      allCards.forEach(card => {
+        if (card !== selectedCard) {
+          card.classList.add('unselected');
+        } else {
+          card.classList.add('selected');
+        }
+      });
+
+      // CSSトランジション（位置の移動と拡大）が終わるのを待ってからフリップ
+      setTimeout(() => {
+        selectedCard.classList.add('flipped');
+        
+        // フリップ完了後にキーワードを表示
+        setTimeout(() => {
+          showKeywords();
+        }, 1000); // フリップにかかる時間+α
+        
+      }, 700); // flexの移動にかかる時間
+    }
+
+    // キーワードボタンの表示
+    function showKeywords() {
+      keywordsSection.classList.remove('hidden');
+      
+      currentSelectedCardData.keywords.forEach((keywordObj, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'keyword-btn px-6 py-3 rounded-full text-white font-bold tracking-widest flex-1 min-w-[120px] max-w-[200px] text-center';
+        btn.textContent = keywordObj.word;
+        btn.onclick = () => showResult(keywordObj, btn);
+        keywordsButtons.appendChild(btn);
+      });
+    }
+
+    // 結果の表示
+    function showResult(keywordObj, clickedBtn) {
+      // 押されたボタン以外を消す（または無効化してスタイルを変える）
+      const allBtns = keywordsButtons.querySelectorAll('button');
+      allBtns.forEach(btn => {
+        if (btn !== clickedBtn) {
+          btn.style.display = 'none';
+        } else {
+          btn.classList.add('cursor-default');
+          btn.onclick = null; // クリック無効化
+        }
+      });
+      
+      // ガイダンステキストの非表示
+      keywordsSection.querySelector('p').style.display = 'none';
+
+      // 結果データをDOMにセット
+      document.getElementById('result-keyword').textContent = `「${keywordObj.word}」`;
+      document.getElementById('result-message').textContent = keywordObj.message;
+      
+      const questionsContainer = document.getElementById('result-questions');
+      questionsContainer.innerHTML = '';
+      keywordObj.questions.forEach(q => {
+        const li = document.createElement('li');
+        li.textContent = q;
+        li.className = 'flex items-start';
+        questionsContainer.appendChild(li);
+      });
+
+      // 結果エリアをフェードイン
+      resultSection.classList.remove('hidden');
+      
+      // スクロールを促すために少し下へスクロール
+      setTimeout(() => {
+        resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+
+    // アプリのリセット
+    function resetApp() {
+      // スクロールを上に戻す
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      
+      setTimeout(() => {
+        // キーワードセクションの状態を元に戻す
+        keywordsSection.querySelector('p').style.display = 'block';
+        initApp();
+      }, 500);
+    }
+
+    // 起動時の初期化
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
