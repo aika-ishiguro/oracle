@@ -44,9 +44,13 @@
       perspective: 1000px;
       flex: 1 1 0;
       max-width: 130px;
-      aspect-ratio: 89 / 126; /* 89✕126mmの比率に変更 */
+      aspect-ratio: 65 / 106;
       transition: all 0.7s cubic-bezier(0.4, 0, 0.2, 1);
       cursor: pointer;
+      /* カード全体の選択・長押しメニューを防止 */
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
     /* 選択時の状態 */
@@ -101,10 +105,15 @@
       transform: rotateY(180deg);
     }
 
+    /* 画像保護対策（長押し・ドラッグ・右クリック対象から除外） */
     .card-front img, .card-back img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      pointer-events: none;        /* 画像自体のマウス・タッチ判定を無効化（親要素のクリックは有効） */
+      user-select: none;           /* テキスト・画像選択を無効化 */
+      -webkit-user-select: none;   /* Safari/Chrome向け選択無効化 */
+      -webkit-touch-callout: none; /* iPhone/iPadでの長押しポップアップを無効化 */
     }
 
     /* ボタンや結果パネルの装飾 */
@@ -145,8 +154,8 @@
       </p>
     </header>
 
-    <!-- カード表示エリア -->
-    <section id="cards-container" class="flex justify-center items-center gap-4 w-full max-w-lg mb-8 transition-all duration-700 h-[220px] sm:h-[300px]">
+    <!-- カード表示エリア（右クリック禁止属性を追加） -->
+    <section id="cards-container" oncontextmenu="return false;" class="flex justify-center items-center gap-4 w-full max-w-lg mb-8 transition-all duration-700 h-[220px] sm:h-[300px]">
       <!-- JSでカード3枚を動的に生成 -->
     </section>
 
@@ -186,11 +195,10 @@
 
   <script>
     // 曼荼羅オラクルカードのデータ（PDFより抽出）
-    // ※画像ファイルの拡張子を.jpgから.pngに修正しました
     const cardsData = [
       {
         id: 1,
-        image: '1_s.png',
+        image: '1_s.jpg',
         keywords: [
           {
             word: '進',
@@ -223,7 +231,7 @@
       },
       {
         id: 10,
-        image: '10_s.png',
+        image: '10_s.jpg',
         keywords: [
           {
             word: '魂',
@@ -256,7 +264,7 @@
       },
       {
         id: 11,
-        image: '11_s.png',
+        image: '11_s.jpg',
         keywords: [
           {
             word: '光',
@@ -289,7 +297,7 @@
       },
       {
         id: 18,
-        image: '18_s.png',
+        image: '18_s.jpg',
         keywords: [
           {
             word: '新',
@@ -322,7 +330,7 @@
       },
       {
         id: 22,
-        image: '22_s.png',
+        image: '22_s.jpg',
         keywords: [
           {
             word: '和',
@@ -355,7 +363,7 @@
       },
       {
         id: 26,
-        image: '26_s.png',
+        image: '26_s.jpg',
         keywords: [
           {
             word: '信',
@@ -388,7 +396,7 @@
       },
       {
         id: 32,
-        image: '32_s.png',
+        image: '32_s.jpg',
         keywords: [
           {
             word: '咲',
@@ -431,6 +439,18 @@
     let isAnimating = false;
     let currentSelectedCardData = null;
 
+    // 画像の右クリックやドラッグ保存をページ全体で防ぐイベント設定
+    document.addEventListener('contextmenu', function(e) {
+      if (e.target.tagName === 'IMG' || e.target.closest('.card-wrapper')) {
+        e.preventDefault();
+      }
+    });
+    document.addEventListener('dragstart', function(e) {
+      if (e.target.tagName === 'IMG' || e.target.closest('.card-wrapper')) {
+        e.preventDefault();
+      }
+    });
+
     // アプリの初期化
     function initApp() {
       isAnimating = false;
@@ -455,11 +475,11 @@
         cardWrapper.innerHTML = `
           <div class="card-inner">
             <div class="card-front">
-              <!-- 指定された画像をロード (uramen.jpg を uramen.png に変更) -->
-              <img src="uramen.png" alt="裏向きのカード">
+              <!-- 指定された画像をロード（ドラッグ禁止属性を追加） -->
+              <img src="uramen.jpg" alt="裏向きのカード" draggable="false">
             </div>
             <div class="card-back">
-              <img src="" alt="表向きのカード" class="result-img">
+              <img src="" alt="表向きのカード" class="result-img" draggable="false">
             </div>
           </div>
         `;
